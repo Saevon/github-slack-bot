@@ -77,10 +77,21 @@ class UserMapping(object):
 
 
 class WebhookEvents(object):
+    '''
+    https://developer.github.com/webhooks/
+    '''
 
     def __init__(self, slack, mapping):
         self.slack = slack
         self.mapping = mapping
+
+    def log_event(self, message):
+        print("=========")
+        print(message)
+        print("=========")
+
+    ####################################################################
+    # Github Events
 
     def on_unassigned(self, data):
         pass
@@ -110,18 +121,19 @@ class WebhookEvents(object):
         #####################################
         # Formats to slack style
         attachment = {
-            "fallback": "PR Assigned: {link}: {message}\nAssigned By: {assigner}\nRepo: {repo_name}".format(
+            "fallback": "PR Assigned: {link}: {message}\nAssigned By: {assigner}\nRepo: {repo_name} {branch}".format(
                 link=pr_url,
                 message=pr_message,
                 assigner=assigner["name"],
                 repo_name=repo_name,
+                branch=pr_branch,
             ),
             "color": "#36a64f",
-            "author_name": "{assigner}".format(assigner=assigner["name"]),
+            # "author_name": "{assigner}".format(assigner=assigner["name"]),
             # "author_link": "http://flickr.com/bobby/",
             # "author_icon": "http://flickr.com/icons/bobby.jpg",
             # "pretext": "Optional text that appears above the attachment block",
-            "title": "PR Assigned",
+            "title": "a Pull Request was assigned to you",
             "title_link": "{link}".format(link=pr_url),
             "text": pr_message,
             "fields": [
@@ -135,17 +147,22 @@ class WebhookEvents(object):
                     "value": assigner["name"],
                     "short": False,
                 },
+                {
+                    "title": "Branch",
+                    "value": pr_branch,
+                    "short": False,
+                },
             ],
-            "image_url": "http://my-website.com/path/to/image.jpg",
-            "thumb_url": "http://example.com/path/to/thumb.png",
+            # "image_url": "http://my-website.com/path/to/image.jpg",
+            # "thumb_url": "http://example.com/path/to/thumb.png",
             "footer": "Github PR",
-            "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
-            "ts": 123456789
+            # "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
+            # "ts": 123456789
         }
 
         ##################################
         # Log the event
-        print(attachment["fallback"])
+        self.log_event(attachment["fallback"])
 
         #################################
         # Send a slack message
@@ -176,6 +193,8 @@ if __name__ == "__main__":
             if not enabled:
                 github.create_hook(repo, SERVER_IP)
             print("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
+
+    print("Starting Webhook")
 
     # Start the server
     mapping = UserMapping(USER_MAPPING)
