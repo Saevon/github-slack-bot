@@ -18,10 +18,10 @@ def get_users(api):
 
     if not response.get('ok'):
         if response.get('error') == 'invalid_auth':
-            print('Slack Authentication is Invalid')
+            sys.stderr.write('ERROR: Slack Authentication is Invalid\n')
         else:
-            print("ERROR: {error}".format(error=response))
-        return
+            sys.stderr.write("ERROR: {error}\n".format(error=response))
+        return []
 
     # retrieve all users so we can find our bot
     users = response.get('members')
