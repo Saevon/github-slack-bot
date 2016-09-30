@@ -14,11 +14,17 @@ sys.setdefaultencoding('utf-8')
 
 
 def get_users(api):
-    api_call = api.api_call("users.list")
+    response = api.api_call("users.list")
 
-    if api_call.get('ok'):
-        # retrieve all users so we can find our bot
-        users = api_call.get('members')
+    if not response.get('ok'):
+        if response.get('error') == 'invalid_auth':
+            print('Slack Authentication is Invalid')
+        else:
+            print("ERROR: {error}".format(error=response))
+        return
+
+    # retrieve all users so we can find our bot
+    users = response.get('members')
 
     return users
 
@@ -104,7 +110,7 @@ class WebhookEvents(object):
         #####################################
         # Formats to slack style
         attachment = {
-            "fallback": "PR Assigned: {link}: {message}\nby {assigner}\n{repo_name}".format(
+            "fallback": "PR Assigned: {link}: {message}\nAssigned By: {assigner}\nRepo: {repo_name}".format(
                 link=pr_url,
                 message=pr_message,
                 assigner=assigner["name"],
@@ -137,6 +143,10 @@ class WebhookEvents(object):
             "ts": 123456789
         }
 
+        ##################################
+        # Log the event
+        print(attachment["fallback"])
+
         #################################
         # Send a slack message
         slack_username = user["slack"]
@@ -165,6 +175,7 @@ if __name__ == "__main__":
             enabled = github.check_hook(repo, SERVER_IP)
             if not enabled:
                 github.create_hook(repo, SERVER_IP)
+            print("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
 
     # Start the server
     mapping = UserMapping(USER_MAPPING)
