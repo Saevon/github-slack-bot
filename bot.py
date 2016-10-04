@@ -53,12 +53,14 @@ class UserMapping(object):
         if slack is None:
             slack = name
 
-        self.users[name] = self.format_user(name, github, slack)
+        user = self.format_user(name, github, slack)
 
-        self.slacks[slack] = name
-        self.githubs[github] = name
+        self.users[name.lower()] = user
 
-        return self.users[name]
+        self.slacks[slack.lower()] = name
+        self.githubs[github.lower()] = name
+
+        return user
 
     def format_user(self, name, github=None, slack=None):
         return {
@@ -72,14 +74,14 @@ class UserMapping(object):
         Finds a user by one of the valid keys
         '''
         if github is not None:
-            name = self.githubs.get(github)
+            name = self.githubs.get(github.lower())
         if slack is not None:
-            name = self.slacks.get(slack)
+            name = self.slacks.get(slack.lower())
 
         if name is None:
             return None
 
-        user = self.users.get(name, None)
+        user = self.users.get(name.lower(), None)
         if user is None:
             user = {
                 "name": name,
