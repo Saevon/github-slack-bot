@@ -102,11 +102,11 @@ class GithubAPI(object):
 
 def clean_data(request):
     try:
-        data = json.loads(request.data)
+        return json.loads(request.data)
     except ValueError:
         print("ERROR: Could not decode data")
         print(request.args, request.data)
-        return
+        return {}
 
 
 def webhook_server(events):
@@ -115,8 +115,8 @@ def webhook_server(events):
     @app.route('/', methods=['POST'])
     def event():
         data = clean_data(request)
-        action = data.get('action', False)
         event = request.headers.get('X-GitHub-Event')
+        action = data.get('action', False)
 
         # We shouldn't have any other events...
         if data.get("hook", False) and data.get("hook_id", False):
