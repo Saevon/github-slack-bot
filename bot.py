@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 import sys
 
-from github import GithubAPI, webhook_server
+from github import GithubAPI, webhook_server, find_mentions
 
 from env import *
 
@@ -99,17 +99,180 @@ class WebhookEvents(object):
         print(message)
         print("=========")
 
+    def on_mention(self, slack_data, mention):
+        slack_data = slack_data.copy()
+        slack_data["user"] = mention["name"]
+
+        #####################################
+        # Formats to slack style
+        attachment = {
+            "fallback": "You've been Mentioned: {link}\n{message}\nSender: {assigner}\nMentioned User: {user}\nRepo: {repo_name} {branch}\nSource: {source}".format(**slack_data),
+            "color": "#36a64f",
+            "title": "You've been mentioned in a {source}".format(**slack_data),
+            "title_link": "{link}".format(**slack_data),
+            "text": "{message}".format(**slack_data),
+            "fields": [
+                {
+                    "title": "Repo",
+                    "value": slack_data["repo_name"],
+                    "short": False,
+                },
+                {
+                    "title": "Sender",
+                    "value": slack_data["assigner"],
+                    "short": False,
+                },
+            ],
+            # "image_url": "http://my-website.com/path/to/image.jpg",
+            # "thumb_url": "http://example.com/path/to/thumb.png",
+            "footer": "Github Mention",
+            # "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
+            # "ts": 123456789
+        }
+
+        # Not all things have a branch
+        branch = slack_data.get("branch", False)
+        if branch:
+            attachment["fields"].append({
+                "title": "Branch",
+                "value": slack_data["branch"],
+                "short": False,
+            })
+
+        ##################################
+        # Log the event
+        self.log_event(attachment["fallback"])
+
+        #################################
+        # Send a slack message
+        slack_username = mention["slack"]
+
+        self.slack.api_call(
+            "chat.postMessage",
+            channel="@{username}".format(username=slack_username),
+            text="",
+            attachments=json.dumps([attachment]),
+            username="majbot",
+        )
+
     ####################################################################
     # Github Events
 
-    def on_pull_request_unassigned(self, data):
-        pass
+    def on_commit_comment_created(self, data):
+        ###############################
+        # Pulls our github info
+        assigner = self.mapping.get_user(
+            github=data.get("sender").get("login")
+        )
+
+        comment = data.get("comment")
+        comment_url = comment.get("html_url")
+        message = comment.get("body")
+
+        repo = data.get("repository")
+        repo_name = repo.get("full_name")
+
+        slack_data = {
+            "message": message,
+            "link": comment_url,
+            "assigner": assigner["name"],
+            "repo_name": repo_name,
+            "source": "Commit",
+        }
+
+        # See if someone was mentioned
+        mentions = find_mentions(message)
+        for mention in mentions:
+            user = self.mapping.get_user(github=mention)
+
+            # Send individual mentions
+            self.on_mention(slack_data, user)
+
+    def on_issue_comment_created(self, data):
+        return self.on_issue_comment(data)
+
+    def on_issue_comment_edited(self, data):
+        return self.on_issue_comment(data)
+
+    def on_issue_comment(self, data):
+        ###############################
+        # Pulls our github info
+        assigner = self.mapping.get_user(
+            github=data.get("sender").get("login")
+        )
+
+        # Some issues are also a PR
+        pr = data.get("pull_request", False)
+        if pr:
+            branch = pr.get("head").get("ref")
+        else:
+            branch = False
+
+        comment = data.get("comment")
+        comment_url = comment.get("html_url")
+        message = comment.get("body")
+
+        repo = data.get("repository")
+        repo_name = repo.get("full_name")
+
+        slack_data = {
+            "message": message,
+            "link": comment_url,
+            "assigner": assigner["name"],
+            "repo_name": repo_name,
+            "source": "PR Comment",
+        }
+
+        # See if someone was mentioned
+        mentions = find_mentions(message)
+        for mention in mentions:
+            user = self.mapping.get_user(github=mention)
+
+            # Send individual mentions
+            self.on_mention(slack_data, user)
+
+    def on_pull_request_review_comment_edited(self, data):
+        return self.on_pull_request_review_comment(data)
+
+    def on_pull_request_review_comment_created(self, data):
+        return self.on_pull_request_review_comment(data)
+
+    def on_pull_request_review_comment(self, data):
+        ###############################
+        # Pulls our github info
+        assigner = self.mapping.get_user(
+            github=data.get("sender").get("login")
+        )
+
+        pr = data.get("pull_request")
+        pr_title = pr.get("title")
+        pr_branch = pr.get("head").get("ref")
+
+        comment = data.get("comment")
+        comment_url = comment.get("html_url")
+        message = comment.get("body")
+
+        repo = data.get("repository")
+        repo_name = repo.get("full_name")
+
+        slack_data = {
+            "message": message,
+            "link": comment_url,
+            "branch": pr_branch,
+            "assigner": assigner["name"],
+            "repo_name": repo_name,
+            "source": "PR Review",
+        }
+
+        # See if someone was mentioned
+        mentions = find_mentions(message)
+        for mention in mentions:
+            user = self.mapping.get_user(github=mention)
+
+            # Send individual mentions
+            self.on_mention(slack_data, user)
 
     def on_pull_request_assigned(self, data):
-        user_type = data.get("assignee").get("type")
-        if user_type.lower() != "user":
-            return
-
         ###############################
         # Pulls our github info
         user = self.mapping.get_user(
@@ -181,7 +344,6 @@ class WebhookEvents(object):
         #################################
         # Send a slack message
         slack_username = user["slack"]
-        user = find_user(self.slack, slack_username)
 
         self.slack.api_call(
             "chat.postMessage",
