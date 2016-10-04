@@ -71,9 +71,18 @@ class UserMapping(object):
         if slack is not None:
             name = self.slacks.get(slack)
 
-        if name is not None:
-            return self.users.get(name)
+        if name is None:
+            return None
 
+        user = self.users.get(name, None)
+        if user is None:
+            user = {
+                "name": name,
+                "github": github,
+                "slack": slack,
+            }
+
+        return user
 
 
 class WebhookEvents(object):
