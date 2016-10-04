@@ -3,6 +3,7 @@
 from flask import Flask, request
 
 import json
+import re
 import requests
 import sys
 
@@ -10,6 +11,33 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+
+GITHUB_MENTION = re.compile(
+    # Start with a non-word-boundary (ensuring the part before this can't be a word)
+    # Followed by an @ (ensuring emails should work)
+    r'(?:\B@)'
+
+    # Followed by the username itself
+    r'(?P<username>'
+        # It must start with an alphanumeric
+        r'[a-z0-9]'
+        # Followed by a dash or alphanumeric
+        # But the dash must always be followed by an alphanumeric char (if it exists)
+        r'(?:-?[a-z0-9])'
+
+        # The length of the name is 39 Char: 1 starting char and 38 of the following ones
+        r'{0,38}'
+    r')'
+
+    # Then ensure there's a word boundary after as well
+    r'(?=\b)'
+
+    r'',
+    re.IGNORECASE
+)
+
+def find_mentions(text):
+    return GITHUB_MENTION.findall(text)
 
 class GithubAPI(object):
 
