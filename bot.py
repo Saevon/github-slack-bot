@@ -329,17 +329,12 @@ class WebhookEvents(object):
             "fields": [
                 {
                     "title": "Repo",
-                    "value": repo_name,
+                    "value": "{repo_name}@{branch}".format(repo_name=repo_name, branch=pr_branch),
                     "short": False,
                 },
                 {
                     "title": "Assigned By",
                     "value": assigner["name"],
-                    "short": False,
-                },
-                {
-                    "title": "Branch",
-                    "value": pr_branch,
                     "short": False,
                 },
             ],
