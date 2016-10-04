@@ -123,7 +123,7 @@ def webhook_server(events):
             # The webhook got created
             return "OK"
         elif action is False:
-            print("Unknown Event")
+            print("Unknown Event({event})".format(event=event))
             print(json.dumps(data))
             return "OK"
 
@@ -132,7 +132,7 @@ def webhook_server(events):
         if callback is not False:
             callback(data)
         else:
-            print("New Event: " + action)
+            print("New Event: {event}:{action}".format(event=event, action=action))
             print(json.dumps(data))
 
         return "OK"
