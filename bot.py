@@ -190,18 +190,19 @@ class WebhookEvents(object):
 if __name__ == "__main__":
     slack_client = SlackClient(SLACK["TOKEN"])
 
+    # TODO: this is disabled for now, since we can just make one webhook instead
     # Prep the Webhooks
-    for user, repos in REPOS.iteritems():
-        for repo in repos:
-            github = GithubAPI(
-                user=user,
-                token=GITHUB["TOKEN"],
-                endpoint=GITHUB["ENDPOINT"]
-            )
-            enabled = github.check_hook(repo, SERVER_IP)
-            if not enabled:
-                github.create_hook(repo, SERVER_IP)
-            print("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
+    # for user, repos in REPOS.iteritems():
+    #     for repo in repos:
+    #         github = GithubAPI(
+    #             user=user,
+    #             token=GITHUB["TOKEN"],
+    #             endpoint=GITHUB["ENDPOINT"]
+    #         )
+    #         enabled = github.check_hook(repo, SERVER_IP)
+    #         if not enabled:
+    #             github.create_hook(repo, SERVER_IP)
+    #         print("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
 
     print("Starting Webhook")
 
