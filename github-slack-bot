@@ -1,0 +1,19 @@
+#!/bin/bash
+
+LOG_PATH=/var/log
+LOG_PREFIX=github-slack-bot
+MERGED_LOG=${LOG_PATH}/${LOG_PREFIX}.log
+ERROR_LOG=${LOG_PATH}/${LOG_PREFIX}.error.log
+OUT_LOG=${LOG_PATH}/${LOG_PREFIX}.out.log
+
+ALL_LOGS="${MERGED_LOG} ${OUT_LOG} ${ERROR_LOG}"
+
+if [[ $1 =~ "--flush" ]]; then
+	rm -f ${ALL_LOGS}
+	exit 0
+fi
+
+# Writes to a merged logfile, and separated logfiles
+# Also writes to stdout/stderr
+echo "LOGS: ${ALL_LOGS}"
+python bot.py 2>> ${ERROR_LOG} | tee -a "${OUT_LOG}" "${MERGED_LOG}" | tail -f -n 0 "${ERROR_LOG}" > ${MERGED_LOG}

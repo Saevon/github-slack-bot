@@ -356,8 +356,7 @@ class WebhookEvents(object):
             username="majbot",
         )
 
-
-if __name__ == "__main__":
+def run():
     slack_client = SlackClient(SLACK["TOKEN"])
 
     # TODO: this is disabled for now, since we can just make one webhook instead
@@ -383,3 +382,5 @@ if __name__ == "__main__":
 
 
 
+if __name__ == "__main__":
+    run()

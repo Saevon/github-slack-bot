@@ -1,0 +1,113 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          github-slack-bot
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: github-slack integration
+# Description:       Sends messages to slack when github updates (PR, commits, etc)
+### END INIT INFO
+
+#
+# /etc/init.d/github-slack-bot
+# Subsystem file for "Github-Slack Bot"
+#
+# chkconfig: 2345 95 05
+# description: github-slack-bot server daemon
+#
+# processname: github-slack-bot
+# config: ${BOT_CWD}/env.py
+# config: /etc/sysconfig/github-slack-bot
+# pidfile: /var/run/github-slack-bot.pid
+
+
+# source function library
+. /lib/lsb/init-functions
+
+# pull in sysconfig settings
+# Loads where the code lies
+# Should define BOT_CWD
+if [ -f /etc/sysconfig/github-slack-bot ]; then
+	. /etc/sysconfig/github-slack-bot
+else
+	echo "Can't find config file" 1>&2
+	exit 1
+fi
+
+prog="github-slack-bot"
+PIDFILE=/var/run/${prog}.pid
+
+RETVAL=0
+start() {
+	echo -n $"Starting $prog: "
+
+	cd ${BOT_CWD} && ./$prog &
+	pid=$!
+
+	echo "${pid}"
+
+	RETVAL=$?
+	[ "$RETVAL" = 0 ] && echo ${pid} > ${PIDFILE}
+	echo
+}
+
+stop() {
+	echo -n $"Stopping $prog:"
+
+	if [ -f ${PIDFILE} ] ; then
+		pid=$(cat ${PIDFILE})
+		echo ${pid}
+		pkill -TERM -P ${pid}
+	fi
+
+	RETVAL=$?
+	[ "$RETVAL" = 0 ] && rm -f ${PIDFILE}
+	echo
+}
+
+flush() {
+	echo -n $"Flushing Logs $prog:"
+
+	cd ${BOT_CWD} && ./$prog --flush
+	echo
+}
+
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		start
+		;;
+	reload)
+		stop
+		start
+		;;
+	condrestart)
+		if [ -f ${PIDFILE} ] ; then
+			stop
+			# avoid race
+			sleep 3
+			start
+		fi
+		;;
+	flush)
+		flush
+		;;
+	status)
+		status $prog
+		RETVAL=$?
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|reload|condrestart|status|flush}"
+		RETVAL=1
+esac
+
+exit $RETVAL
