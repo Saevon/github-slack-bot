@@ -103,6 +103,10 @@ class WebhookEvents(object):
         slack_data = slack_data.copy()
         slack_data["user"] = mention["name"]
 
+        branch = slack_data.get("branch", False)
+        if branch is False:
+            slack_data["branch"] = ""
+
         #####################################
         # Formats to slack style
         attachment = {
@@ -131,8 +135,7 @@ class WebhookEvents(object):
         }
 
         # Not all things have a branch
-        branch = slack_data.get("branch", False)
-        if branch:
+        if branch is not False:
             attachment["fields"].append({
                 "title": "Branch",
                 "value": slack_data["branch"],
