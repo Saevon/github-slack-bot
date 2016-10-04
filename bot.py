@@ -123,6 +123,8 @@ class WebhookEvents(object):
         pr_message = pr.get("body")
         pr_branch = pr.get("head").get("ref")
         pr_url = pr.get("html_url")
+        pr_title = pr.get("title")
+        pr_number = pr.get("number")
 
         repo = data.get("repository")
         repo_name = repo.get("full_name")
@@ -130,10 +132,13 @@ class WebhookEvents(object):
         #####################################
         # Formats to slack style
         attachment = {
-            "fallback": "PR Assigned: {link}: {message}\nAssigned By: {assigner}\nRepo: {repo_name} {branch}".format(
+            "fallback": "PR Assigned: {link}\n{title} #{id}: {message}\nAssigned By: {assigner}\nAssigned To: {user}\nRepo: {repo_name} {branch}".format(
                 link=pr_url,
+                title=pr_title,
+                id=pr_number,
                 message=pr_message,
                 assigner=assigner["name"],
+                user=user,
                 repo_name=repo_name,
                 branch=pr_branch,
             ),
@@ -142,7 +147,7 @@ class WebhookEvents(object):
             # "author_link": "http://flickr.com/bobby/",
             # "author_icon": "http://flickr.com/icons/bobby.jpg",
             # "pretext": "Optional text that appears above the attachment block",
-            "title": "a Pull Request was assigned to you",
+            "title": "{title} #{id} has been assigned to you".format(id=pr_number, title=pr_title),
             "title_link": "{link}".format(link=pr_url),
             "text": pr_message,
             "fields": [
