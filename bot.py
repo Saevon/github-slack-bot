@@ -102,10 +102,10 @@ class WebhookEvents(object):
     ####################################################################
     # Github Events
 
-    def on_unassigned(self, data):
+    def on_pull_request_unassigned(self, data):
         pass
 
-    def on_assigned(self, data):
+    def on_pull_request_assigned(self, data):
         user_type = data.get("assignee").get("type")
         if user_type.lower() != "user":
             return

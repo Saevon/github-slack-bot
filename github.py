@@ -100,31 +100,35 @@ class GithubAPI(object):
         return False
 
 
+def clean_data(request):
+    try:
+        data = json.loads(request.data)
+    except ValueError:
+        print("ERROR: Could not decode data")
+        print(request.args, request.data)
+        return
+
+
 def webhook_server(events):
     app = Flask(__name__)
 
     @app.route('/', methods=['POST'])
     def event():
-        try:
-            data = json.loads(request.data)
-        except ValueError:
-            print("ERROR: Could not decode data")
-            print(request.args, request.data)
-            return
+        data = clean_data(request)
         action = data.get('action', False)
+        event = request.headers.get('X-GitHub-Event')
 
         # We shouldn't have any other events...
         if data.get("hook", False) and data.get("hook_id", False):
             # The webhook got created
-            pass
-        if action is False:
+            return "OK"
+        elif action is False:
             print("Unknown Event")
             print(json.dumps(data))
-
             return "OK"
 
         # See if we have an event for this
-        callback = getattr(events, "on_{action}".format(action=action), False)
+        callback = getattr(events, "on_{event}_{action}".format(action=action, event=event), False)
         if callback is not False:
             callback(data)
         else:
@@ -132,6 +136,9 @@ def webhook_server(events):
             print(json.dumps(data))
 
         return "OK"
+
+
+
 
     @app.route('/', methods=['GET'])
     def hello():
