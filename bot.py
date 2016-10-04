@@ -53,14 +53,19 @@ class UserMapping(object):
         if slack is None:
             slack = name
 
-        self.users[name] = {
+        self.users[name] = self.format_user(name, github, slack)
+
+        self.slacks[slack] = name
+        self.githubs[github] = name
+
+        return self.users[name]
+
+    def format_user(self, name, github=None, slack=None):
+        return {
             "github": github,
             "slack": slack,
             "name": name,
         }
-
-        self.slacks[slack] = name
-        self.githubs[github] = name
 
     def get_user(self, name=None, github=None, slack=None):
         '''
@@ -98,6 +103,24 @@ class WebhookEvents(object):
         print("=========")
         print(message)
         print("=========")
+
+    def on_mentions(self, slack_data):
+        # Find any mentions
+        mentions = find_mentions(slack_data.get("message"))
+        for mention in mentions:
+            # See if the user is listed
+            user = self.mapping.get_user(github=mention)
+            if user is None:
+                print("Unmapped user found: {user}".format(user=user))
+
+                # Not found, see if its a valid slack user
+                if find_user(self.slack, mention) is None:
+                    break
+                # If it worked create a temporary mapping
+                user = self.mapping.format_user(user)
+
+            # Send individual mentions
+            self.on_mention(slack_data, user)
 
     def on_mention(self, slack_data, mention):
         slack_data = slack_data.copy()
@@ -184,12 +207,7 @@ class WebhookEvents(object):
         }
 
         # See if someone was mentioned
-        mentions = find_mentions(message)
-        for mention in mentions:
-            user = self.mapping.get_user(github=mention)
-
-            # Send individual mentions
-            self.on_mention(slack_data, user)
+        self.on_mentions(slack_data)
 
     def on_issue_comment_created(self, data):
         return self.on_issue_comment(data)
@@ -227,12 +245,7 @@ class WebhookEvents(object):
         }
 
         # See if someone was mentioned
-        mentions = find_mentions(message)
-        for mention in mentions:
-            user = self.mapping.get_user(github=mention)
-
-            # Send individual mentions
-            self.on_mention(slack_data, user)
+        self.on_mentions(slack_data)
 
     def on_pull_request_review_comment_edited(self, data):
         return self.on_pull_request_review_comment(data)
@@ -268,12 +281,7 @@ class WebhookEvents(object):
         }
 
         # See if someone was mentioned
-        mentions = find_mentions(message)
-        for mention in mentions:
-            user = self.mapping.get_user(github=mention)
-
-            # Send individual mentions
-            self.on_mention(slack_data, user)
+        self.on_mentions(slack_data)
 
     def on_pull_request_assigned(self, data):
         ###############################
