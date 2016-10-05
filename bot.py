@@ -287,6 +287,32 @@ class WebhookEvents(object):
         # See if someone was mentioned
         self.on_mentions(slack_data)
 
+    def on_pull_request_opened(self, data):
+        ###############################
+        # Pulls our github info
+        assigner = self.mapping.get_user(
+            github=data.get("sender").get("login")
+        )
+
+        pr = data.get("pull_request")
+        pr_message = pr.get("body")
+        pr_branch = pr.get("head").get("ref")
+        pr_url = pr.get("html_url")
+
+        repo = data.get("repository")
+        repo_name = repo.get("full_name")
+
+        slack_data = {
+            "message": pr_message,
+            "link": pr_url,
+            "assigner": assigner["name"],
+            "repo_name": repo_name,
+            "source": "Opened PR Description",
+        }
+
+        # See if someone was mentioned
+        self.on_mentions(slack_data)
+
     def on_pull_request_assigned(self, data):
         ###############################
         # Pulls our github info
