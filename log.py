@@ -9,9 +9,17 @@ def format(*args):
     '''
     Formats each output type, adding a date
     '''
-    text = ''.join(args)
     date = time.strftime("%Y-%m-%d %H:%M:%S")
 
+    # Format each arg to a string
+    text = ''
+    for arg in args:
+        try:
+            text += unicode(arg)
+        except UnicodeDecodeError:
+            text += repr(arg)
+
+    # Combine the final format
     text = "[{date}]: {text}".format(date=date, text=text)
 
     return text
