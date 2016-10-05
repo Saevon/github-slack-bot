@@ -2,13 +2,14 @@
 # -*- coding: UTF-8 -*-
 import sys
 
-from github import GithubAPI, webhook_server, find_mentions
-from log import log, warn, error
-
-from env import *
-
 from slackclient import SlackClient
 import json
+import time
+import threading
+
+from github import GithubAPI, webhook_server, find_mentions
+from log import log, warn, error
+from env import *
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -362,6 +363,15 @@ class WebhookEvents(object):
             username="majbot",
         )
 
+
+DEFAULT_HEARTBEAT = 30 * 60
+def heartbeat(seconds=DEFAULT_HEARTBEAT):
+
+    while True:
+        log("Hearbeat")
+        time.sleep(seconds)
+
+
 def run():
     slack_client = SlackClient(SLACK["TOKEN"])
 
@@ -378,6 +388,8 @@ def run():
     #         if not enabled:
     #             github.create_hook(repo, SERVER_IP)
     #         log("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
+    heartbeat_thread = threading.Thread(target=heartbeat, args=())
+    heartbeat_thread.start()
 
     log("Starting Webhook")
 
