@@ -415,6 +415,7 @@ def run():
     #             github.create_hook(repo, SERVER_IP)
     #         log("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
     heartbeat_thread = threading.Thread(target=heartbeat, args=())
+    heartbeat_thread.daemon = True
     heartbeat_thread.start()
 
     log("Starting Webhook")
@@ -423,7 +424,6 @@ def run():
     mapping = UserMapping(USER_MAPPING)
     events = WebhookEvents(slack_client, mapping)
     webhook_server(events)
-
 
 
 if __name__ == "__main__":
