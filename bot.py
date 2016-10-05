@@ -4,12 +4,13 @@ import sys
 
 from slackclient import SlackClient
 import json
+import logging
+import logging.config
 import time
 import threading
 
 from github import GithubAPI, webhook_server, find_mentions
-from log import log, warn, error
-from env import *
+import env
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -390,41 +391,35 @@ class WebhookEvents(object):
         )
 
 
-DEFAULT_HEARTBEAT = 30 * 60
-def heartbeat(seconds=DEFAULT_HEARTBEAT):
-
+def heartbeat(logger, seconds):
     while True:
-        log("Hearbeat")
+        logger.info("Hearbeat")
         time.sleep(seconds)
 
 
-def run():
-    slack_client = SlackClient(SLACK["TOKEN"])
+def setup():
+    slack_client = SlackClient(env.SLACK["TOKEN"])
 
-    # TODO: this is disabled for now, since we can just make one webhook instead
-    # Prep the Webhooks
-    # for user, repos in REPOS.iteritems():
-    #     for repo in repos:
-    #         github = GithubAPI(
-    #             user=user,
-    #             token=GITHUB["TOKEN"],
-    #             endpoint=GITHUB["ENDPOINT"]
-    #         )
-    #         enabled = github.check_hook(repo, SERVER_IP)
-    #         if not enabled:
-    #             github.create_hook(repo, SERVER_IP)
-    #         log("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
-    heartbeat_thread = threading.Thread(target=heartbeat, args=())
+    logging.config.dictConfig(env.LOGGING)
+
+    # Enable the heartbeat
+    heartbeat_logger = logging.getLogger('heartbeat')
+    heartbeat_thread = threading.Thread(target=heartbeat, kwargs={
+        "logger": heartbeat_logger,
+        "seconds": env.HEARTBEAT_DURATION,
+    })
     heartbeat_thread.daemon = True
     heartbeat_thread.start()
 
-    log("Starting Webhook")
-
     # Start the server
-    mapping = UserMapping(USER_MAPPING)
+    mapping = UserMapping(env.USER_MAPPING)
     events = WebhookEvents(slack_client, mapping)
-    webhook_server(events)
+    github_logger = logging.getLogger('listener')
+    application = webhook_server(events, github_logger)
+
+    return application
 
 
 if __name__ == "__main__":
-    run()
+    app = setup()
+    app.run(port=8080, host="0.0.0.0")

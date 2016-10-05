@@ -7,8 +7,6 @@ import re
 import requests
 import sys
 
-from log import log, warn, error
-
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -104,21 +102,21 @@ class GithubAPI(object):
         return False
 
 
-def clean_data(request):
-    try:
-        return json.loads(request.data)
-    except ValueError:
-        warn("ERROR: Could not decode data")
-        warn(request.args, request.data)
-        return {}
-
-
-def webhook_server(events):
+def webhook_server(events, logger):
     app = Flask(__name__)
+    app.logger.addHandler(logger)
 
     @app.route('/', methods=['POST'])
     def event():
-        data = clean_data(request)
+        # Get the json data
+        try:
+            data = json.loads(request.data)
+        except ValueError:
+            logger.warning("ERROR: Could not decode data")
+            logger.warning(request.args, request.data)
+            data = {}
+
+        # Find out what event this is
         event = request.headers.get('X-GitHub-Event')
         action = data.get('action', False)
 
@@ -127,11 +125,11 @@ def webhook_server(events):
             # The webhook got created
             return "OK"
         elif event is False:
-            warn("====================")
-            warn("Unknown Event({event})".format(event=event))
-            warn("Headers: ", json.dumps(dict(request.headers.iteritems())))
-            warn(json.dumps(data))
-            warn("====================")
+            logger.warning("====================")
+            logger.warning("Unknown Event({event})".format(event=event))
+            logger.warning("Headers: ", json.dumps(dict(request.headers.iteritems())))
+            logger.warning(json.dumps(data))
+            logger.warning("====================")
             return "OK"
 
         # See if we have an event for this
@@ -143,7 +141,7 @@ def webhook_server(events):
         if callback is not False:
             callback(data)
         else:
-            log("Unhandled Event: {event}:{action}".format(event=event, action=action))
+            logger.info("Unhandled Event: {event}:{action}".format(event=event, action=action))
 
         return "OK"
 
@@ -151,5 +149,5 @@ def webhook_server(events):
     def hello():
         return 'Hello this is the MajikBot\n'
 
-    app.run(port=80, host='0.0.0.0')
+    return app
 

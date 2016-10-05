@@ -19,7 +19,7 @@
 #
 # processname: github-slack-bot
 # config: ${BOT_CWD}/env.py
-# config: /etc/sysconfig/github-slack-bot
+# config: /var/www/bot/config.bash
 # pidfile: /var/run/github-slack-bot.pid
 
 
@@ -29,8 +29,8 @@
 # pull in sysconfig settings
 # Loads where the code lies
 # Should define BOT_CWD
-if [ -f /etc/sysconfig/github-slack-bot ]; then
-	. /etc/sysconfig/github-slack-bot
+if [ -f /var/www/github-slack-bot/config.bash ]; then
+	. /var/www/github-slack-bot/config.bash
 else
 	echo "Can't find config file" 1>&2
 	exit 1
