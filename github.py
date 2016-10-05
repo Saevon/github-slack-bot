@@ -129,7 +129,7 @@ def webhook_server(events):
         elif action is False:
             warn("====================")
             warn("Unknown Event({event})".format(event=event))
-            warn("Headers: ", json.dumps(dict(request.headers)))
+            warn("Headers: ", json.dumps(dict(request.headers.iteritems())))
             warn(json.dumps(data))
             warn("====================")
             return "OK"
