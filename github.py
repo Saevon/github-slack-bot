@@ -126,7 +126,7 @@ def webhook_server(events):
         if data.get("hook", False) and data.get("hook_id", False):
             # The webhook got created
             return "OK"
-        elif action is False:
+        elif event is False:
             warn("====================")
             warn("Unknown Event({event})".format(event=event))
             warn("Headers: ", json.dumps(dict(request.headers.iteritems())))
@@ -135,12 +135,15 @@ def webhook_server(events):
             return "OK"
 
         # See if we have an event for this
-        callback = getattr(events, "on_{event}_{action}".format(action=action, event=event), False)
+        if action is False:
+            callback = getattr(events, "on_{event}".format(action=action, event=event), False)
+        else:
+            callback = getattr(events, "on_{event}_{action}".format(action=action, event=event), False)
+
         if callback is not False:
             callback(data)
         else:
-            log("New Event: {event}:{action}".format(event=event, action=action))
-            log(json.dumps(data))
+            log("Unhandled Event: {event}:{action}".format(event=event, action=action))
 
         return "OK"
 
