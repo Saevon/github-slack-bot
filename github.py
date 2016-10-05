@@ -7,6 +7,8 @@ import re
 import requests
 import sys
 
+from log import log, warn, error
+
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -36,8 +38,10 @@ GITHUB_MENTION = re.compile(
     re.IGNORECASE
 )
 
+
 def find_mentions(text):
     return GITHUB_MENTION.findall(text)
+
 
 class GithubAPI(object):
 
@@ -104,8 +108,8 @@ def clean_data(request):
     try:
         return json.loads(request.data)
     except ValueError:
-        print("ERROR: Could not decode data")
-        print(request.args, request.data)
+        warn("ERROR: Could not decode data")
+        warn(request.args, request.data)
         return {}
 
 
@@ -123,8 +127,11 @@ def webhook_server(events):
             # The webhook got created
             return "OK"
         elif action is False:
-            print("Unknown Event({event})".format(event=event))
-            print(json.dumps(data))
+            warn("====================")
+            warn("Unknown Event({event})".format(event=event))
+            warn("Headers: ", json.dumps(dict(request.headers)))
+            warn(json.dumps(data))
+            warn("====================")
             return "OK"
 
         # See if we have an event for this
@@ -132,17 +139,14 @@ def webhook_server(events):
         if callback is not False:
             callback(data)
         else:
-            print("New Event: {event}:{action}".format(event=event, action=action))
-            print(json.dumps(data))
+            log("New Event: {event}:{action}".format(event=event, action=action))
+            log(json.dumps(data))
 
         return "OK"
 
-
-
-
     @app.route('/', methods=['GET'])
     def hello():
-        return 'Hello this is the MajikBot'
+        return 'Hello this is the MajikBot\n'
 
     app.run(port=80, host='0.0.0.0')
 

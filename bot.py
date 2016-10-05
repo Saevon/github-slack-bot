@@ -3,6 +3,7 @@
 import sys
 
 from github import GithubAPI, webhook_server, find_mentions
+from log import log, warn, error
 
 from env import *
 
@@ -18,9 +19,9 @@ def get_users(api):
 
     if not response.get('ok'):
         if response.get('error') == 'invalid_auth':
-            sys.stderr.write('ERROR: Slack Authentication is Invalid\n')
+            error('ERROR: Slack Authentication is Invalid')
         else:
-            sys.stderr.write("ERROR: {error}\n".format(error=response))
+            error("ERROR: {error}".format(error=response))
         return []
 
     # retrieve all users so we can find our bot
@@ -102,9 +103,9 @@ class WebhookEvents(object):
         self.mapping = mapping
 
     def log_event(self, message):
-        print("=========")
-        print(message)
-        print("=========")
+        log("=========")
+        log(message)
+        log("=========")
 
     def on_mentions(self, slack_data):
         # Find any mentions
@@ -113,7 +114,7 @@ class WebhookEvents(object):
             # See if the user is listed
             user = self.mapping.get_user(github=mention)
             if user is None:
-                print("Unmapped user found: {user}".format(user=user))
+                error("Unmapped user found: {user}".format(user=user))
 
                 # Not found, see if its a valid slack user
                 if find_user(self.slack, mention) is None:
@@ -376,9 +377,9 @@ def run():
     #         enabled = github.check_hook(repo, SERVER_IP)
     #         if not enabled:
     #             github.create_hook(repo, SERVER_IP)
-    #         print("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
+    #         log("Enabled Hook: {user}/{repo}".format(repo=repo, user=user))
 
-    print("Starting Webhook")
+    log("Starting Webhook")
 
     # Start the server
     mapping = UserMapping(USER_MAPPING)
