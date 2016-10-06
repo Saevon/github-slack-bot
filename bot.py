@@ -342,7 +342,7 @@ class WebhookEvents(object):
                 id=pr_number,
                 message=pr_message,
                 assigner=assigner["name"],
-                user=user,
+                user=user["name"],
                 repo_name=repo_name,
                 branch=pr_branch,
             ),
