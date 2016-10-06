@@ -142,7 +142,10 @@ def webhook_server(events, logger):
         if callback is not False:
             callback(data)
         else:
-            logger.info("Unhandled Event: {event}:{action}".format(event=event, action=action))
+            logger.info("Unhandled Event: {event}:{action}".format(
+                event=event,
+                action="" if action is None else action
+            ))
 
         return "OK"
 
