@@ -100,14 +100,15 @@ class WebhookEvents(object):
     https://developer.github.com/webhooks/
     '''
 
-    def __init__(self, slack, mapping):
+    def __init__(self, slack, mapping, logger):
         self.slack = slack
         self.mapping = mapping
+        self.logger = logger
 
     def log_event(self, message):
-        log("=========")
-        log(message)
-        log("=========")
+        self.logger.info("=========")
+        self.logger.info(message)
+        self.logger.info("=========")
 
     def on_mentions(self, slack_data):
         # Find any mentions
@@ -413,8 +414,10 @@ def setup():
         heartbeat_thread.start()
 
     # Start the server
+    slack_logger = logging.getLogger('listener')
     mapping = UserMapping(env.USER_MAPPING)
-    events = WebhookEvents(slack_client, mapping)
+    events = WebhookEvents(slack_client, mapping, slack_logger)
+
     github_logger = logging.getLogger('listener')
     application = webhook_server(events, github_logger)
 
