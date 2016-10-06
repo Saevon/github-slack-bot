@@ -14,4 +14,4 @@ fi
 # Writes to a merged logfile, and separated logfiles
 # Also writes to stdout/stderr
 echo "LOGS: ${ALL_LOGS}"
-python bot.py >> ${MERGED_LOG} 2>&1
+PYTHONDONTWRITEBYTECODE=1 python bot.py >> ${MERGED_LOG} 2>&1

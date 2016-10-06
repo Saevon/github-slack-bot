@@ -14,4 +14,4 @@ fi
 # Writes to a merged logfile, and separated logfiles
 # Also writes to stdout/stderr
 echo "LOGS: ${ALL_LOGS}"
-uwsgi --ini wsgi.ini --strict >> "${WSGI_LOG}" 2>&1
+PYTHONDONTWRITEBYTECODE=1 uwsgi --ini wsgi.ini --strict >> "${WSGI_LOG}" 2>&1
