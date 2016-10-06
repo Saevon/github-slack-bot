@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from flask import Flask, request
 
-import json
-import re
-import requests
 import sys
+import re
+import json
+import requests
+
+import flask
 
 
 reload(sys)
@@ -103,22 +104,22 @@ class GithubAPI(object):
 
 
 def webhook_server(events, logger):
-    app = Flask(__name__)
+    app = flask.Flask(__name__)
     app.logger.addHandler(logger)
 
     @app.route('/', methods=['POST'])
     def event():
         # Get the json data
         try:
-            data = json.loads(request.data)
+            data = json.loads(flask.request.data)
         except ValueError:
             logger.warning("ERROR: Could not decode data")
-            logger.warning("Querystring: ", json.dumps(request.args))
-            logger.warning("Data: ", request.data)
+            logger.warning("Querystring: ", json.dumps(flask.request.args))
+            logger.warning("Data: ", flask.request.data)
             data = {}
 
         # Find out what event this is
-        event = request.headers.get('X-GitHub-Event', False)
+        event = flask.request.headers.get('X-GitHub-Event', False)
         action = data.get('action', False)
 
         # We shouldn't have any other events...
@@ -128,7 +129,7 @@ def webhook_server(events, logger):
         elif event is False:
             logger.warning("====================")
             logger.warning("Unknown Event({event})".format(event=event))
-            logger.warning("Headers: ", json.dumps(dict(request.headers.iteritems())))
+            logger.warning("Headers: ", json.dumps(dict(flask.request.headers.iteritems())))
             logger.warning(json.dumps(data))
             logger.warning("====================")
             return "OK"
@@ -154,4 +155,3 @@ def webhook_server(events, logger):
         return 'Hello this is the MajikBot\n'
 
     return app
-
