@@ -28,6 +28,7 @@ If you change the init.d script run `systemctl daemon-reload`
 
 install uwsgi
 
+`apt-get install libpcre3 libpcre3-dev`
 `pip install uwsgi`
 
 Create links or move the following files
