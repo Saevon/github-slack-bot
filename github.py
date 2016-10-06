@@ -122,9 +122,10 @@ def webhook_server(events, logger):
         try:
             data = json.loads(flask.request.data)
         except ValueError:
-            logger.warning("ERROR: Could not decode data")
-            logger.warning("Querystring: ", json.dumps(flask.request.args))
-            logger.warning("Data: ", flask.request.data)
+            logger.warning("ERROR: Could not decode data\nQuerystring: {query}\nData: {data}".format(
+                data=flask.request.data,
+                query=json.dumps(flask.request.args),
+            ))
             data = {}
 
         # Find out what event this is
@@ -136,11 +137,11 @@ def webhook_server(events, logger):
             # The webhook got created
             return "OK"
         elif event is False:
-            logger.warning("====================")
-            logger.warning("Unknown Event({event})".format(event=event))
-            logger.warning("Headers: ", json.dumps(dict(flask.request.headers.iteritems())))
-            logger.warning(json.dumps(data))
-            logger.warning("====================")
+            logger.warning("Unknown Event({event})\nHeaders: {headers}\nData: {data}\n".format(
+                event=event,
+                headers=json.dumps(dict(flask.request.headers.iteritems())),
+                data=json.dumps(data),
+            ))
             return "OK"
 
         # See if we have an event for this
@@ -154,7 +155,7 @@ def webhook_server(events, logger):
         else:
             logger.info("Unhandled Event: {event}:{action}".format(
                 event=event,
-                action="" if action is None else action
+                action="" if action is False else action
             ))
 
         return "OK"

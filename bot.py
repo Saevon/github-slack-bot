@@ -106,9 +106,7 @@ class WebhookEvents(object):
         self.logger = logger
 
     def log_event(self, message):
-        self.logger.info("=========")
         self.logger.info(message)
-        self.logger.info("=========")
 
     def on_mentions(self, slack_data):
         # Find any mentions
@@ -402,6 +400,7 @@ def setup():
     slack_client = SlackClient(env.SLACK["TOKEN"])
 
     logging.config.dictConfig(env.LOGGING)
+    main_logger = logging.getLogger('')
 
     # Enable the heartbeat
     if env.HEARTBEAT_DURATION >= 1:
@@ -414,12 +413,15 @@ def setup():
         heartbeat_thread.start()
 
     # Start the server
-    slack_logger = logging.getLogger('listener')
+    slack_logger = logging.getLogger('messenger')
     mapping = UserMapping(env.USER_MAPPING)
     events = WebhookEvents(slack_client, mapping, slack_logger)
 
     github_logger = logging.getLogger('listener')
     application = webhook_server(events, github_logger)
+
+    # Log Status
+    main_logger.info('Started')
 
     return application
 
