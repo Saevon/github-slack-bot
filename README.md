@@ -51,6 +51,7 @@ Create the log folder
 Create the User
 
 `useradd --system github-slack-bot`
+`gpasswd -a "github-slack-bot" www-data`
 
 
 ### Running

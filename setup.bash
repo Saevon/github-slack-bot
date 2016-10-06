@@ -5,17 +5,19 @@ PROJECT=$(pwd)
 
 # Setup the WSGI directory
 mkdir ${WEB_PATH}
+mkdir ${WEB_PATH}/logs
+mkdir ${WEB_PATH}/data
 
 ln -s ${PROJECT}/config.bash ${WEB_PATH}/
 ln -s ${PROJECT}/wsgi.ini ${WEB_PATH}/
 
-ln -s ${PROJECT}/github-slack-bot.sock ${WEB_PATH}/
 ln -s ${PROJECT}/wsgi.py ${WEB_PATH}/
 
 cd ${WEB_PATH}
-chgrp -h github-slack-bot wsgi.py logs
+chgrp -h github-slack-bot wsgi.py
 chmod g=r wsgi.py
-chmod -R g=rwX logs
+chown github-slack-bot:github-slack-bot logs data
+chmod g=rwX logs logs/main.log data
 cd ${PROJECT}
 
 
