@@ -118,7 +118,7 @@ def webhook_server(events, logger):
             data = {}
 
         # Find out what event this is
-        event = request.headers.get('X-GitHub-Event')
+        event = request.headers.get('X-GitHub-Event', False)
         action = data.get('action', False)
 
         # We shouldn't have any other events...
