@@ -107,6 +107,15 @@ def webhook_server(events, logger):
     app = flask.Flask(__name__)
     app.logger.addHandler(logger)
 
+    @app.route('/robots.txt', methods=['GET'])
+    def robots():
+        robots_txt = "User-agent: *\nDisallow: /\n"
+
+        response = flask.make_response(robots_txt)
+        response.headers["Content-Type"] = "text/plain"
+
+        return response
+
     @app.route('/', methods=['POST'])
     def event():
         # Get the json data
