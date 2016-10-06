@@ -113,7 +113,8 @@ def webhook_server(events, logger):
             data = json.loads(request.data)
         except ValueError:
             logger.warning("ERROR: Could not decode data")
-            logger.warning(request.args, request.data)
+            logger.warning("Querystring: ", json.dumps(request.args))
+            logger.warning("Data: ", request.data)
             data = {}
 
         # Find out what event this is
