@@ -43,7 +43,7 @@ RETVAL=0
 start() {
 	echo -n $"Starting $prog: "
 
-	cd ${BOT_CWD} && ./$prog &
+	cd ${BOT_CWD} && ./$prog wsgi &
 	pid=$!
 
 	echo "${pid}"
@@ -74,6 +74,13 @@ flush() {
 	echo
 }
 
+mark_logs() {
+    echo -n $"Marking Logs $prog:"
+
+    cd ${BOT_CWD} && ./$prog --mark-logs
+    echo
+}
+
 
 case "$1" in
 	start)
@@ -101,12 +108,15 @@ case "$1" in
 	flush)
 		flush
 		;;
+	mark-logs)
+            mark_logs
+            ;;
 	status)
 		status $prog
 		RETVAL=$?
 		;;
 	*)
-		echo $"Usage: $0 {start|stop|restart|reload|condrestart|status|flush}"
+		echo $"Usage: $0 {start|stop|restart|reload|condrestart|status|flush|mark-logs}"
 		RETVAL=1
 esac
 

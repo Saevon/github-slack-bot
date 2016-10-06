@@ -65,3 +65,6 @@ If you ran the bot using the `github-slack-bot` script, then the log files are a
 
  * `main.log`: Merged log of stderr and stdout
  * `wsgi.log`: WSGI runner logs
+ * `dev.log`: werkzeug runner logs
+ * `nginx.access.log` Nginx access Logs
+ * `nginx.error.log` Nginx Logs

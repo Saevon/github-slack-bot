@@ -29,7 +29,7 @@ ln -s ${PROJECT}/logrotate.conf /etc/logrotate.d/nginx.github-slack-bot
 
 # Setup current folder
 cd ${PROJECT}
-ln -s run-wsgi.bash github-slack-bot
+ln -s run.bash github-slack-bot
 
 find . -name "*.py" -exec chgrp github-slack-bot {} \; -exec chmod g=r {} \;
 
