@@ -23,6 +23,7 @@ cd ${PROJECT}
 # Setup nginx
 ln -s ${PROJECT}/nginx.conf /etc/nginx/sites-available/github-slack-bot
 ln -s /etc/nginx/sites-available/github-slack-bot /etc/nginx/sites-available/
+ln -s ${PROJECT}/logrotate.conf /etc/logrotate.d/nginx.github-slack-bot
 
 # Setup current folder
 cd ${PROJECT}
