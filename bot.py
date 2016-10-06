@@ -403,13 +403,14 @@ def setup():
     logging.config.dictConfig(env.LOGGING)
 
     # Enable the heartbeat
-    heartbeat_logger = logging.getLogger('heartbeat')
-    heartbeat_thread = threading.Thread(target=heartbeat, kwargs={
-        "logger": heartbeat_logger,
-        "seconds": env.HEARTBEAT_DURATION,
-    })
-    heartbeat_thread.daemon = True
-    heartbeat_thread.start()
+    if env.HEARTBEAT_DURATION >= 1:
+        heartbeat_logger = logging.getLogger('heartbeat')
+        heartbeat_thread = threading.Thread(target=heartbeat, kwargs={
+            "logger": heartbeat_logger,
+            "seconds": env.HEARTBEAT_DURATION,
+        })
+        heartbeat_thread.daemon = True
+        heartbeat_thread.start()
 
     # Start the server
     mapping = UserMapping(env.USER_MAPPING)
