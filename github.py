@@ -119,9 +119,9 @@ def webhook_server(events, logger):
     @app.route('/', methods=['POST'])
     def event():
         # Get the json data
-        try:
-            data = json.loads(flask.request.data)
-        except ValueError:
+        if flask.request.is_json:
+            data = flask.request.get_json()
+        else:
             logger.warning("ERROR: Could not decode data\nQuerystring: {query}\nData: {data}".format(
                 data=flask.request.data,
                 query=json.dumps(flask.request.args),
