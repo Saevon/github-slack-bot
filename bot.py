@@ -92,20 +92,17 @@ class WebhookEvents(object):
             "color": "#36a64f",
             "title": "You've been mentioned in a {source}".format(**slack_data),
             "title_link": "{link}".format(**slack_data),
-            "author_name": "{assigner}".format(**slack_data),
-            "author_icon": slack_data.get("avatar_url", ""),
             "fields": [
                 {
                     "title": "Repo",
                     "value": slack_data["repo_name"],
-                    "short": False,
+                    "short": True,
                 }
             ],
-            # "image_url": "http://my-website.com/path/to/image.jpg",
-            # "thumb_url": "http://example.com/path/to/thumb.png",
             "footer": "Github Mention",
-            # "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
-            # "ts": 123456789
+
+            # TODO: Hardcoded slack icon
+            "footer_icon": "https://avatars.slack-edge.com/2016-09-30/86125165617_c717ddd0e0e41b6b2597_48.jpg",
         }
 
         # Not all things have a branch
@@ -113,7 +110,7 @@ class WebhookEvents(object):
             attachment["fields"].append({
                 "title": "Branch",
                 "value": slack_data["branch"],
-                "short": False,
+                "short": True,
             })
 
         ##################################
@@ -130,7 +127,7 @@ class WebhookEvents(object):
             text=slack_data["message"],
             attachments=json.dumps([attachment]),
             icon_url=slack_data["assigner"].avatar,
-            username=slack_data["assigner"],
+            username=slack_data["assigner"].name,
         )
 
     ####################################################################
@@ -304,10 +301,6 @@ class WebhookEvents(object):
                 branch=pr_branch,
             ),
             "color": "#36a64f",
-            # "author_name": "{assigner}".format(assigner=assigner["name"]),
-            # "author_link": "http://flickr.com/bobby/",
-            # "author_icon": "http://flickr.com/icons/bobby.jpg",
-            # "pretext": "Optional text that appears above the attachment block",
             "title": "{title} #{id} has been assigned to you".format(id=pr_number, title=pr_title),
             "title_link": "{link}".format(link=pr_url),
             "text": pr_message,
@@ -315,7 +308,7 @@ class WebhookEvents(object):
                 {
                     "title": "Repo",
                     "value": "{repo_name}@{branch}".format(repo_name=repo_name, branch=pr_branch),
-                    "short": False,
+                    "short": True,
                 },
                 {
                     "title": "Assigned By",
@@ -323,11 +316,7 @@ class WebhookEvents(object):
                     "short": True,
                 },
             ],
-            # "image_url": "http://my-website.com/path/to/image.jpg",
-            # "thumb_url": "http://example.com/path/to/thumb.png",
             "footer": "Github PR",
-            # "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
-            # "ts": 123456789
         }
 
         ##################################
@@ -344,7 +333,7 @@ class WebhookEvents(object):
             text="",
             attachments=json.dumps([attachment]),
             icon_url=assigner.avatar,
-            username=assigner,
+            username=assigner.name,
         )
 
 

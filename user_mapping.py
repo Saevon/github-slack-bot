@@ -10,6 +10,7 @@ class UserAccount(collections.Mapping):
         "name",
         "slack",
         "github_avatar",
+        "avatar",
     ]
 
     def __init__(self, name, github=None, slack=None):
@@ -46,6 +47,7 @@ class UserAccount(collections.Mapping):
     def __getitem__(self, key):
         if key in self.VALID_KEYS:
             return getattr(self, key)
+        raise KeyError
 
     def __iter__(self):
         for key in self.VALID_KEYS:
@@ -113,3 +115,4 @@ class UserMapping(object):
             )
 
         return user
+
