@@ -10,7 +10,9 @@ import time
 import threading
 
 from github import GithubAPI, webhook_server, find_mentions
+from user_mapping import UserMapping, UserAccount
 import env
+
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -39,62 +41,6 @@ def find_user(api, username):
             return user
 
 
-class UserMapping(object):
-
-    def __init__(self, default=None):
-        self.users = {}
-        self.slacks = {}
-        self.githubs = {}
-
-        if default is not None:
-            for user in default:
-                self.add_user(**user)
-
-    def add_user(self, name, github=None, slack=None):
-        if github is None:
-            github = name
-        if slack is None:
-            slack = name
-
-        user = self.format_user(name, github, slack)
-
-        self.users[name.lower()] = user
-
-        self.slacks[slack.lower()] = name
-        self.githubs[github.lower()] = name
-
-        return user
-
-    def format_user(self, name, github=None, slack=None):
-        return {
-            "github": github,
-            "slack": slack,
-            "name": name,
-        }
-
-    def get_user(self, name=None, github=None, slack=None):
-        '''
-        Finds a user by one of the valid keys
-        '''
-        if github is not None:
-            name = self.githubs.get(github.lower())
-        if slack is not None:
-            name = self.slacks.get(slack.lower())
-
-        if name is None:
-            return None
-
-        user = self.users.get(name.lower(), None)
-        if user is None:
-            user = {
-                "name": name,
-                "github": github,
-                "slack": slack,
-            }
-
-        return user
-
-
 class WebhookEvents(object):
     '''
     https://developer.github.com/webhooks/
@@ -115,20 +61,25 @@ class WebhookEvents(object):
             # See if the user is listed
             user = self.mapping.get_user(github=mention)
             if user is None:
-                error("Unmapped user found: {user}".format(user=user))
+                error("Unmapped user found: {user}".format(user=mention))
 
                 # Not found, see if its a valid slack user
                 if find_user(self.slack, mention) is None:
                     break
+
                 # If it worked create a temporary mapping
-                user = self.mapping.format_user(user)
+                user = UserAccount(
+                    name=mention,
+                    github=mention,
+                    slack=mention,
+                )
 
             # Send individual mentions
             self.on_mention(slack_data, user)
 
     def on_mention(self, slack_data, mention):
         slack_data = slack_data.copy()
-        slack_data["user"] = mention["name"]
+        slack_data["user"] = mention
 
         branch = slack_data.get("branch", False)
         if branch is False:
@@ -178,8 +129,8 @@ class WebhookEvents(object):
             channel="@{username}".format(username=slack_username),
             text=slack_data["message"],
             attachments=json.dumps([attachment]),
-            icon_url=slack_data["avatar_url"],
-            username=slack_data["assigner"]
+            icon_url=slack_data["assigner"].avatar,
+            username=slack_data["assigner"],
         )
 
     ####################################################################
@@ -204,7 +155,7 @@ class WebhookEvents(object):
         slack_data = {
             "message": message,
             "link": comment_url,
-            "assigner": assigner["name"],
+            "assigner": assigner,
             "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "Commit",
@@ -244,7 +195,7 @@ class WebhookEvents(object):
         slack_data = {
             "message": message,
             "link": comment_url,
-            "assigner": assigner["name"],
+            "assigner": assigner,
             "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "PR Comment",
@@ -281,7 +232,7 @@ class WebhookEvents(object):
             "message": message,
             "link": comment_url,
             "branch": pr_branch,
-            "assigner": assigner["name"],
+            "assigner": assigner,
             "repo_name": repo_name,
             "source": "PR Review",
         }
@@ -308,7 +259,7 @@ class WebhookEvents(object):
         slack_data = {
             "message": pr_message,
             "link": pr_url,
-            "assigner": assigner["name"],
+            "assigner": assigner,
             "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "Opened PR Description",
@@ -347,8 +298,8 @@ class WebhookEvents(object):
                 title=pr_title,
                 id=pr_number,
                 message=pr_message,
-                assigner=assigner["name"],
-                user=user["name"],
+                assigner=assigner,
+                user=user,
                 repo_name=repo_name,
                 branch=pr_branch,
             ),
@@ -368,8 +319,8 @@ class WebhookEvents(object):
                 },
                 {
                     "title": "Assigned By",
-                    "value": assigner["name"],
-                    "short": False,
+                    "value": assigner,
+                    "short": True,
                 },
             ],
             # "image_url": "http://my-website.com/path/to/image.jpg",
@@ -392,8 +343,8 @@ class WebhookEvents(object):
             channel="@{username}".format(username=slack_username),
             text="",
             attachments=json.dumps([attachment]),
-            icon_url=avatar_url,
-            username=assigner["name"],
+            icon_url=assigner.avatar,
+            username=assigner,
         )
 
 
