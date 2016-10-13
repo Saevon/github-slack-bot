@@ -178,7 +178,8 @@ class WebhookEvents(object):
             channel="@{username}".format(username=slack_username),
             text=slack_data["message"],
             attachments=json.dumps([attachment]),
-            username="majbot",
+            icon_url=slack_data["avatar_url"],
+            username=slack_data["assigner"]
         )
 
     ####################################################################
@@ -325,6 +326,8 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
+        avatar_url = data.get("sender").get("avatar_url")
+
 
         pr = data.get("pull_request")
         pr_message = pr.get("body")
@@ -389,7 +392,8 @@ class WebhookEvents(object):
             channel="@{username}".format(username=slack_username),
             text="",
             attachments=json.dumps([attachment]),
-            username="majbot",
+            icon_url=avatar_url,
+            username=assigner["name"],
         )
 
 
