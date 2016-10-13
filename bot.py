@@ -282,6 +282,9 @@ class WebhookEvents(object):
                 },
             ],
             "footer": "Github PR",
+
+            # TODO: Hardcoded slack icon
+            "footer_icon": "https://avatars.slack-edge.com/2016-09-30/86125165617_c717ddd0e0e41b6b2597_48.jpg",
         }
 
         #################################
