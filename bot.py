@@ -137,22 +137,18 @@ class WebhookEvents(object):
         #####################################
         # Formats to slack style
         attachment = {
-            "fallback": "You've been Mentioned: {link}\n{message}\nSender: {assigner}\nMentioned User: {user}\nRepo: {repo_name} {branch}\nSource: {source}".format(**slack_data),
+            "fallback": "You've been Mentioned: {link}\nSender: {assigner}\nMentioned User: {user}\nRepo: {repo_name} {branch}\nSource: {source}".format(**slack_data),
             "color": "#36a64f",
             "title": "You've been mentioned in a {source}".format(**slack_data),
             "title_link": "{link}".format(**slack_data),
-            "text": "{message}".format(**slack_data),
+            "author_name": "{assigner}".format(**slack_data),
+            "author_icon": slack_data.get("avatar_url", ""),
             "fields": [
                 {
                     "title": "Repo",
                     "value": slack_data["repo_name"],
                     "short": False,
-                },
-                {
-                    "title": "Sender",
-                    "value": slack_data["assigner"],
-                    "short": False,
-                },
+                }
             ],
             # "image_url": "http://my-website.com/path/to/image.jpg",
             # "thumb_url": "http://example.com/path/to/thumb.png",
@@ -171,7 +167,7 @@ class WebhookEvents(object):
 
         ##################################
         # Log the event
-        self.log_event(attachment["fallback"])
+        self.log_event(attachment["fallback"] + "\n\n{message}".format(**slack_data))
 
         #################################
         # Send a slack message
@@ -180,7 +176,7 @@ class WebhookEvents(object):
         self.slack.api_call(
             "chat.postMessage",
             channel="@{username}".format(username=slack_username),
-            text="",
+            text=slack_data["message"],
             attachments=json.dumps([attachment]),
             username="majbot",
         )
@@ -195,6 +191,8 @@ class WebhookEvents(object):
             github=data.get("sender").get("login")
         )
 
+        avatar_url = data.get("sender").get("avatar_url")
+
         comment = data.get("comment")
         comment_url = comment.get("html_url")
         message = comment.get("body")
@@ -206,6 +204,7 @@ class WebhookEvents(object):
             "message": message,
             "link": comment_url,
             "assigner": assigner["name"],
+            "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "Commit",
         }
@@ -225,6 +224,7 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
+        avatar_url = data.get("sender").get("avatar_url")
 
         # Some issues are also a PR
         pr = data.get("pull_request", False)
@@ -244,6 +244,7 @@ class WebhookEvents(object):
             "message": message,
             "link": comment_url,
             "assigner": assigner["name"],
+            "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "PR Comment",
         }
@@ -293,6 +294,7 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
+        avatar_url = data.get("sender").get("avatar_url")
 
         pr = data.get("pull_request")
         pr_message = pr.get("body")
@@ -306,6 +308,7 @@ class WebhookEvents(object):
             "message": pr_message,
             "link": pr_url,
             "assigner": assigner["name"],
+            "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "Opened PR Description",
         }
