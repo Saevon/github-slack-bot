@@ -2,43 +2,19 @@
 # -*- coding: UTF-8 -*-
 import sys
 
-from slackclient import SlackClient
-import json
 import logging
 import logging.config
 import time
 import threading
 
 from github import GithubAPI, webhook_server, find_mentions
+from slack import SlackApi
 from user_mapping import UserMapping, UserAccount
 import env
 
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
-
-
-def get_users(api):
-    response = api.api_call("users.list")
-
-    if not response.get('ok'):
-        if response.get('error') == 'invalid_auth':
-            error('ERROR: Slack Authentication is Invalid')
-        else:
-            error("ERROR: {error}".format(error=response))
-        return []
-
-    # retrieve all users so we can find our bot
-    users = response.get('members')
-
-    return users
-
-
-def find_user(api, username):
-    users = get_users(api)
-    for user in users:
-        if username == user.get("name"):
-            return user
 
 
 class WebhookEvents(object):
@@ -51,9 +27,6 @@ class WebhookEvents(object):
         self.mapping = mapping
         self.logger = logger
 
-    def log_event(self, message):
-        self.logger.info(message)
-
     def on_mentions(self, slack_data):
         # Find any mentions
         mentions = find_mentions(slack_data.get("message"))
@@ -61,10 +34,10 @@ class WebhookEvents(object):
             # See if the user is listed
             user = self.mapping.get_user(github=mention)
             if user is None:
-                error("Unmapped user found: {user}".format(user=mention))
+                self.logger.error("Unmapped user found: {user}".format(user=mention))
 
                 # Not found, see if its a valid slack user
-                if find_user(self.slack, mention) is None:
+                if self.slack.find_user(mention) is None:
                     break
 
                 # If it worked create a temporary mapping
@@ -113,21 +86,13 @@ class WebhookEvents(object):
                 "short": True,
             })
 
-        ##################################
-        # Log the event
-        self.log_event(attachment["fallback"] + "\n\n{message}".format(**slack_data))
-
         #################################
         # Send a slack message
-        slack_username = mention["slack"]
-
-        self.slack.api_call(
-            "chat.postMessage",
-            channel="@{username}".format(username=slack_username),
+        self.slack.send_message(
+            user=slack_data["assigner"],
+            target=mention,
             text=slack_data["message"],
-            attachments=json.dumps([attachment]),
-            icon_url=slack_data["assigner"].avatar,
-            username=slack_data["assigner"].name,
+            attachment=attachment,
         )
 
     ####################################################################
@@ -312,28 +277,20 @@ class WebhookEvents(object):
                 },
                 {
                     "title": "Assigned By",
-                    "value": assigner,
+                    "value": assigner.name,
                     "short": True,
                 },
             ],
             "footer": "Github PR",
         }
 
-        ##################################
-        # Log the event
-        self.log_event(attachment["fallback"])
-
         #################################
         # Send a slack message
-        slack_username = user["slack"]
-
-        self.slack.api_call(
-            "chat.postMessage",
-            channel="@{username}".format(username=slack_username),
+        self.slack.send_message(
+            user=assigner,
+            target=user,
             text="",
-            attachments=json.dumps([attachment]),
-            icon_url=assigner.avatar,
-            username=assigner.name,
+            attachment=attachment,
         )
 
 
@@ -344,8 +301,6 @@ def heartbeat(logger, seconds):
 
 
 def setup():
-    slack_client = SlackClient(env.SLACK["TOKEN"])
-
     logging.config.dictConfig(env.LOGGING)
     main_logger = logging.getLogger('')
 
@@ -362,6 +317,7 @@ def setup():
     # Start the server
     slack_logger = logging.getLogger('messenger')
     mapping = UserMapping(env.USER_MAPPING)
+    slack_client = SlackApi(env.SLACK["TOKEN"], slack_logger)
     events = WebhookEvents(slack_client, mapping, slack_logger)
 
     github_logger = logging.getLogger('listener')
