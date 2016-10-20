@@ -39,7 +39,7 @@ GITHUB_MENTION = re.compile(
 
 
 def find_mentions(text):
-    return GITHUB_MENTION.findall(text)
+    return set(GITHUB_MENTION.findall(text))
 
 
 class GithubAPI(object):
