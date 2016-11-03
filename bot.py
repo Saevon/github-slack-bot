@@ -105,8 +105,6 @@ class WebhookEvents(object):
             github=data.get("sender").get("login")
         )
 
-        avatar_url = data.get("sender").get("avatar_url")
-
         comment = data.get("comment")
         comment_url = comment.get("html_url")
         message = comment.get("body")
@@ -118,7 +116,6 @@ class WebhookEvents(object):
             "message": message,
             "link": comment_url,
             "assigner": assigner,
-            "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "Commit",
         }
@@ -138,7 +135,6 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
-        avatar_url = data.get("sender").get("avatar_url")
 
         # Some issues are also a PR
         pr = data.get("pull_request", False)
@@ -158,7 +154,6 @@ class WebhookEvents(object):
             "message": message,
             "link": comment_url,
             "assigner": assigner,
-            "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "PR Comment",
         }
@@ -208,7 +203,6 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
-        avatar_url = data.get("sender").get("avatar_url")
 
         pr = data.get("pull_request")
         pr_message = pr.get("body")
@@ -222,7 +216,6 @@ class WebhookEvents(object):
             "message": pr_message,
             "link": pr_url,
             "assigner": assigner,
-            "avatar_url": avatar_url,
             "repo_name": repo_name,
             "source": "Opened PR Description",
         }
@@ -239,7 +232,6 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
-        avatar_url = data.get("sender").get("avatar_url")
 
 
         pr = data.get("pull_request")
