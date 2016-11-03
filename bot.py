@@ -22,6 +22,12 @@ class WebhookEvents(object):
     https://developer.github.com/webhooks/
     '''
 
+    COLORS = {
+        "pass": "#36a64f",
+        "warn": "#b09000",
+        "fail": "#E02020",
+    }
+
     def __init__(self, slack, mapping, logger):
         self.slack = slack
         self.mapping = mapping
@@ -62,7 +68,7 @@ class WebhookEvents(object):
         # Formats to slack style
         attachment = {
             "fallback": "You've been Mentioned: {link}\nSender: {assigner}\nMentioned User: {user}\nRepo: {repo_name} {branch}\nSource: {source}".format(**slack_data),
-            "color": "#36a64f",
+            "color": self.COLORS["pass"],
             "title": "You've been mentioned in a {source}".format(**slack_data),
             "title_link": "{link}".format(**slack_data),
             "fields": [
@@ -161,6 +167,93 @@ class WebhookEvents(object):
         # See if someone was mentioned
         self.on_mentions(slack_data)
 
+    def on_pull_request_review_submitted(self, data):
+        ###############################
+        # Pulls our github info
+        review = data.get("review")
+        reviewer = self.mapping.get_user(
+            github=review.get("user").get("login")
+        )
+        status = review.get("state")
+        message = review.get("body")
+        review_url = review.get("html_url")
+
+        pr = data.get("pull_request")
+        pr_message = pr.get("body")
+        pr_branch = pr.get("head").get("ref")
+        pr_url = pr.get("html_url")
+        pr_title = pr.get("title")
+        pr_number = pr.get("number")
+        user = self.mapping.get_user(
+            github=pr.get("user").get("login")
+        )
+
+        repo = pr.get("head").get("repo")
+        repo_name = repo.get("full_name")
+
+        #####################################
+        # Formats to slack style
+        status_color = self.COLORS["warn"]
+        status_message = "Updated"
+        if status == "changes_requested":
+            status_color = self.COLORS["fail"]
+            status_message = "Changes Requested"
+        elif status == "approved":
+            status_color = self.COLORS["pass"]
+            status_message = "Approved"
+        elif status == "commented":
+            status_color = self.COLORS["warn"]
+            status_message = "Reviewed"
+
+        attachment = {
+            "fallback": "PR {status}: {link}\n{title} #{id}:\Review: {message}\nReviewer: {reviewer}\nRepo: {repo_name} {branch}".format(
+                link=pr_url,
+                title=pr_title,
+                id=pr_number,
+                reviewer=reviewer,
+                user=user,
+                repo_name=repo_name,
+                branch=pr_branch,
+                status=status_message,
+                message=message,
+            ),
+            "color": status_color,
+            "title": "PR {status} ({title} #{id})".format(
+                id=pr_number,
+                title=pr_title,
+                status=status_message,
+            ),
+            "title_link": "{link}".format(link=review_url),
+            "text": message,
+            "fields": [
+                {
+                    "title": "Pull Request",
+                    "value": "{repo_name}@{branch}".format(repo_name=repo_name, branch=pr_branch),
+                    "short": True,
+                },
+                {
+                    "title": "Repo",
+                    "value": "{repo_name}@{branch}".format(repo_name=repo_name, branch=pr_branch),
+                    "short": True,
+                },
+            ],
+            "footer": "Github PR {status}".format(status=status_message),
+
+            # TODO: Hardcoded slack icon
+            "footer_icon": "https://avatars.slack-edge.com/2016-09-30/86125165617_c717ddd0e0e41b6b2597_48.jpg",
+        }
+
+        #################################
+        # Send a slack message
+        self.slack.send_message(
+            user=reviewer,
+            target=user,
+            text="",
+            attachment=attachment,
+        )
+
+
+
     def on_pull_request_review_comment_edited(self, data):
         return self.on_pull_request_review_comment(data)
 
@@ -257,7 +350,7 @@ class WebhookEvents(object):
                 repo_name=repo_name,
                 branch=pr_branch,
             ),
-            "color": "#36a64f",
+            "color": self.COLORS["pass"],
             "title": "{title} #{id} has been assigned to you".format(id=pr_number, title=pr_title),
             "title_link": "{link}".format(link=pr_url),
             "text": pr_message,
