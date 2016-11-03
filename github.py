@@ -116,7 +116,7 @@ def webhook_server(events, logger):
 
         return response
 
-    @app.route('/', methods=['POST'])
+    @app.route('/webhook', methods=['POST'])
     def event():
         # Get the json data
         if flask.request.is_json:
