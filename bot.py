@@ -192,6 +192,11 @@ class WebhookEvents(object):
         repo_name = repo.get("full_name")
 
         #####################################
+        # Filter out self comments
+        if reviewer == user:
+            return
+
+        #####################################
         # Formats to slack style
         status_color = self.COLORS["warn"]
         status_message = "Updated"
@@ -204,6 +209,12 @@ class WebhookEvents(object):
         elif status == "commented":
             status_color = self.COLORS["warn"]
             status_message = "Reviewed"
+
+            # Sometimes this even fires if the user commented on a single line of code
+            # In those cases the body is null
+            # We want to ignore those, as another event should handle them
+            if message is None:
+                return
 
         attachment = {
             "fallback": "PR {status}: {link}\n{title} #{id}:\Review: {message}\nReviewer: {reviewer}\nRepo: {repo_name} {branch}".format(

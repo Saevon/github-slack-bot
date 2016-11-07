@@ -62,6 +62,12 @@ class UserAccount(collections.Mapping):
     def __repr__(self):
         return unicode(self)
 
+    ############################
+    # Comparison
+
+    def __eq__(self, other):
+        return self.name == other.name
+
 
 class UserMapping(object):
 
