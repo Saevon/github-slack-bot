@@ -131,6 +131,7 @@ def webhook_server(events, logger):
 
         # Find out what event this is
         event = flask.request.headers.get('X-GitHub-Event', False)
+        event_id = flask.request.headers.get('X-GitHub-Delivery', False)
         action = data.get('action', False)
 
         # We shouldn't have any other events...
@@ -138,12 +139,19 @@ def webhook_server(events, logger):
             # The webhook got created
             return "OK"
         elif event is False:
-            logger.warning("Unknown Event({event})\nHeaders: {headers}\nData: {data}\n".format(
-                event=event,
+            logger.warning("Unknown Event({event_id})\nHeaders: {headers}\nData: {data}\n".format(
+                event_id=event_id,
                 headers=json.dumps(dict(flask.request.headers.iteritems())),
                 data=json.dumps(data),
             ))
             return "OK"
+        else:
+            # Log the event_id
+            logger.info("Event: {event}:{action}:{event_id}".format(
+                event=event,
+                event_id=event_id,
+                action="" if action is False else action,
+            ))
 
         # See if we have an event for this
         if action is False:
