@@ -96,7 +96,8 @@ class GithubAPI(object):
 
         return bool(hook)
 
-    def _find_hook(self, hooks, url):
+    @staticmethod
+    def _find_hook(hooks, url):
         for hook in hooks:
             if hook["config"].get("url", False) == url:
                 return hook
