@@ -327,6 +327,70 @@ class WebhookEvents(object):
         # See if someone was mentioned
         self.on_mentions(slack_data)
 
+    def on_pull_request_review_requested(self, data):
+        ###############################
+        # Pulls our github info
+        user = self.mapping.get_user(
+            github=data.get("requested_reviewer").get("login")
+        )
+        assigner = self.mapping.get_user(
+            github=data.get("sender").get("login")
+        )
+
+        pr = data.get("pull_request")
+        pr_message = pr.get("body")
+        pr_branch = pr.get("head").get("ref")
+        pr_url = pr.get("html_url")
+        pr_title = pr.get("title")
+        pr_number = pr.get("number")
+
+        repo = data.get("repository")
+        repo_name = repo.get("full_name")
+
+        #####################################
+        # Formats to slack style
+        attachment = {
+            "fallback": "PR Review Requested: {link}\n{title} #{id}: {message}\nAssigned By: {assigner}\nAssigned To: {user}\nRepo: {repo_name} {branch}".format(
+                link=pr_url,
+                title=pr_title,
+                id=pr_number,
+                message=pr_message,
+                assigner=assigner,
+                user=user,
+                repo_name=repo_name,
+                branch=pr_branch,
+            ),
+            "color": self.COLORS["pass"],
+            "title": "{title} #{id} needs a review".format(id=pr_number, title=pr_title),
+            "title_link": "{link}".format(link=pr_url),
+            "text": pr_message,
+            "fields": [
+                {
+                    "title": "Repo",
+                    "value": "{repo_name}@{branch}".format(repo_name=repo_name, branch=pr_branch),
+                    "short": True,
+                },
+                {
+                    "title": "Assigned By",
+                    "value": assigner.name,
+                    "short": True,
+                },
+            ],
+            "footer": "Github PR Review Request",
+
+            # TODO: Hardcoded slack icon
+            "footer_icon": "https://avatars.slack-edge.com/2016-09-30/86125165617_c717ddd0e0e41b6b2597_48.jpg",
+        }
+
+        #################################
+        # Send a slack message
+        self.slack.send_message(
+            user=assigner,
+            target=user,
+            text="",
+            attachment=attachment,
+        )
+
     def on_pull_request_assigned(self, data):
         ###############################
         # Pulls our github info
@@ -336,7 +400,6 @@ class WebhookEvents(object):
         assigner = self.mapping.get_user(
             github=data.get("sender").get("login")
         )
-
 
         pr = data.get("pull_request")
         pr_message = pr.get("body")
@@ -377,7 +440,7 @@ class WebhookEvents(object):
                     "short": True,
                 },
             ],
-            "footer": "Github PR",
+            "footer": "Github PR Assigned",
 
             # TODO: Hardcoded slack icon
             "footer_icon": "https://avatars.slack-edge.com/2016-09-30/86125165617_c717ddd0e0e41b6b2597_48.jpg",
