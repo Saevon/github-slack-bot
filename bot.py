@@ -26,6 +26,8 @@ class WebhookEvents(object):
         "pass": "#36a64f",
         "warn": "#b09000",
         "fail": "#E02020",
+        "important": "#E02020",
+        "notify": "#4682b4",
     }
 
     def __init__(self, slack, mapping, logger):
@@ -360,8 +362,8 @@ class WebhookEvents(object):
                 repo_name=repo_name,
                 branch=pr_branch,
             ),
-            "color": self.COLORS["pass"],
-            "title": "{title} #{id} needs a review".format(id=pr_number, title=pr_title),
+            "color": self.COLORS["important"],
+            "title": ":exclamation: PR Needs Review ({title} #{id})".format(id=pr_number, title=pr_title),
             "title_link": "{link}".format(link=pr_url),
             "text": pr_message,
             "fields": [
@@ -424,8 +426,8 @@ class WebhookEvents(object):
                 repo_name=repo_name,
                 branch=pr_branch,
             ),
-            "color": self.COLORS["pass"],
-            "title": "{title} #{id} has been assigned to you".format(id=pr_number, title=pr_title),
+            "color": self.COLORS["notify"],
+            "title": "PR Assigned ({title} #{id})".format(id=pr_number, title=pr_title),
             "title_link": "{link}".format(link=pr_url),
             "text": pr_message,
             "fields": [
@@ -494,3 +496,5 @@ def setup():
 if __name__ == "__main__":
     app = setup()
     app.run(port=8080, host="0.0.0.0")
+
+
