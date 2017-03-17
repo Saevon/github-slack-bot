@@ -19,6 +19,8 @@ Then run the following
 sudo update-rc.d github-slack-bot defaults
 ```
 
+Remember! you also need to setup all the `.env` variables. You also need to get github to send webhook events to the new IP/URI
+
 ## Updating
 
 If you change the init.d script run `systemctl daemon-reload`
