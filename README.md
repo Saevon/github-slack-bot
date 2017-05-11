@@ -11,7 +11,7 @@ To setup the bot as an init.d script you need the following files
  * `./env.py`: needs to be set up with the correct tokens an user mappings
  * `/etc/init.d/github-slack-bot`: The init.d file in this repo `github-slack-bot-init`
  * `./github-slack-bot`: link to the `run-python.bash`
- * `/var/www/github-slack-bot/config.bash`: should set any ENV_VARIABLES, specifically `${BOT_CWD}
+ * `/var/www/github-slack-bot/config.bash`: should set any ENV_VARIABLES, specifically `${BOT_CWD}`
 
 Then run the following
 
@@ -24,6 +24,15 @@ Remember! you also need to setup all the `.env` variables. You also need to get 
 ## Updating
 
 If you change the init.d script run `systemctl daemon-reload`
+
+If you just updated the code run
+`service github-slack-bot restart`
+
+If you change the server anme, nginx needs to know about it (IP counts). Add the new name under `server_name`
+
+Then restart nginx
+
+`service nginx restart`
 
 
 ## Nginx with uWSGI
